@@ -1,23 +1,24 @@
-import AutorenewIcon from "@mui/icons-material/Autorenew";
+import AutorenewIcon from '@mui/icons-material/Autorenew';
 import {
   Button,
   Card,
   CircularProgress,
   IconButton,
   LinearProgress,
-} from "@mui/material";
-import Image from "next/image";
-import { useMemo, useState } from "react";
-import { DIVIDER } from "../constants";
-import ErrorMessage from "./ErrorMessage";
-import { useGeneratedImage, useGeneratedText } from "../hooks";
+} from '@mui/material';
+import Image from 'next/image';
+import { ChatCompletionRequestMessage } from 'openai';
+import { useMemo, useState } from 'react';
+import { DIVIDER } from '../constants';
+import { useGeneratedImage, useGeneratedText } from '../hooks';
+import ErrorMessage from './ErrorMessage';
 
 const IMAGE_SIZE = 512;
 const PADDING = 48;
 
 interface PageProps {
-  prefix: string;
-  onAddPage: (pageText: string) => void;
+  prefix: ChatCompletionRequestMessage[];
+  onAddPage: (content: string, choice: number) => void;
   onDeleteFuturePages: () => void;
 }
 
@@ -26,23 +27,23 @@ export default function StoryPage({
   onAddPage,
   onDeleteFuturePages,
 }: PageProps) {
-  const [pageText, pageTextErrorMessage, regeneratePageText] =
+  const [content, contentErrorMessage, regenerateContent] =
     useGeneratedText(prefix);
-  const [selectedOption, setSelectedOption] = useState<number | undefined>();
+  const [selectedChoice, setSelectedChoice] = useState<number | undefined>();
 
   const structure = useMemo(() => {
-    if (!pageText) return undefined;
-    const dividerIndex = pageText.indexOf(DIVIDER);
-    if (dividerIndex < 0) return { description: pageText };
-    const description = pageText.substring(0, dividerIndex);
-    const options = pageText
+    if (!content) return undefined;
+    const dividerIndex = content.indexOf(DIVIDER);
+    if (dividerIndex < 0) return { description: content };
+    const description = content.substring(0, dividerIndex);
+    const options = content
       .substring(dividerIndex + DIVIDER.length)
       .trim()
       .split(/#[0-9]:\s*/)
       .map((segment) => segment.trim())
       .filter(Boolean);
     return { description, options };
-  }, [pageText]);
+  }, [content]);
 
   const [imageUrl, imageErrorMessage] = useGeneratedImage(
     structure &&
@@ -58,18 +59,18 @@ export default function StoryPage({
         width: IMAGE_SIZE + PADDING,
         padding: PADDING,
         paddingTop: PADDING / 2,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
       }}
       raised
     >
       <IconButton
         style={{ marginBottom: PADDING / 2 }}
-        disabled={!pageText && !pageTextErrorMessage}
+        disabled={!content && !contentErrorMessage}
         onClick={() => {
-          regeneratePageText();
-          setSelectedOption(undefined);
+          regenerateContent();
+          setSelectedChoice(undefined);
           onDeleteFuturePages();
         }}
       >
@@ -82,9 +83,9 @@ export default function StoryPage({
               width: IMAGE_SIZE,
               height: IMAGE_SIZE,
               marginBottom: PADDING,
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
             }}
           >
             {imageUrl ? (
@@ -100,22 +101,22 @@ export default function StoryPage({
               <CircularProgress style={{ width: 100, height: 100 }} />
             )}
           </div>
-          <div style={{ fontStyle: "italic" }}>
+          <div style={{ fontStyle: 'italic' }}>
             {structure.description
-              .split("\n")
+              .split('\n')
               .map((paragraph, i) => paragraph && <p key={i}>{paragraph}</p>)}
           </div>
           {structure.options && (
             <>
               <h4>{DIVIDER}</h4>
-              {structure.options.map((option, i) => (
+              {structure.options.map((option, choice) => (
                 <Button
-                  key={i}
+                  key={choice}
                   fullWidth
-                  variant={selectedOption === i ? "contained" : "text"}
+                  variant={selectedChoice === choice ? 'contained' : 'text'}
                   onClick={() => {
-                    setSelectedOption(i);
-                    onAddPage(pageText + "\n" + i + "\n");
+                    setSelectedChoice(choice);
+                    onAddPage(content, choice);
                   }}
                 >
                   {option}
@@ -124,8 +125,8 @@ export default function StoryPage({
             </>
           )}
         </>
-      ) : pageTextErrorMessage ? (
-        <ErrorMessage message={pageTextErrorMessage} />
+      ) : contentErrorMessage ? (
+        <ErrorMessage message={contentErrorMessage} />
       ) : (
         <LinearProgress style={{ width: IMAGE_SIZE }} />
       )}

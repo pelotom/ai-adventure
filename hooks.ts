@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { ChatCompletionRequestMessage } from 'openai';
 
-export function useGeneratedText(prompt: string | undefined) {
-  return useGenerated('/api/generate-text', prompt);
+export function useGeneratedText(messages: ChatCompletionRequestMessage[]) {
+  return useGenerated('/api/generate-text', JSON.stringify({ messages }));
 }
 
 export function useGeneratedImage(prompt: string | undefined) {
-  return useGenerated('/api/generate-image', prompt);
+  return useGenerated(
+    '/api/generate-image',
+    prompt
+      ? JSON.stringify({
+          prompt,
+        })
+      : undefined
+  );
 }
 
 function useGenerated(
   url: string,
-  prompt: string | undefined
+  body: string | undefined
 ): [string | undefined, string | undefined, () => Promise<void>] {
   const [result, setResult] = useState<string | undefined>();
   const [errorMessage, setErrorMessage] = useState<string | undefined>();
@@ -19,7 +27,7 @@ function useGenerated(
     setResult(undefined);
     setErrorMessage(undefined);
 
-    if (!prompt) return;
+    if (!body) return;
 
     try {
       const response = await fetch(url, {
@@ -27,7 +35,7 @@ function useGenerated(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ prompt }),
+        body,
       });
 
       const data = await response.json();
@@ -39,10 +47,10 @@ function useGenerated(
       }
 
       setResult(data.result);
-    } catch (e: any) {
+    } catch (e) {
       setErrorMessage(e.message);
     }
-  }, [url, prompt]);
+  }, [url, body]);
 
   useEffect(() => {
     regenerate();
