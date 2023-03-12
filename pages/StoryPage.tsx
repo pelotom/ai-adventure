@@ -78,29 +78,6 @@ export default function StoryPage({
       </IconButton>
       {structure ? (
         <>
-          <div
-            style={{
-              width: IMAGE_SIZE,
-              height: IMAGE_SIZE,
-              marginBottom: PADDING,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="generated image"
-                width={IMAGE_SIZE}
-                height={IMAGE_SIZE}
-              />
-            ) : imageErrorMessage ? (
-              <ErrorMessage message={imageErrorMessage} />
-            ) : (
-              <CircularProgress style={{ width: 100, height: 100 }} />
-            )}
-          </div>
           <div style={{ fontStyle: 'italic' }}>
             {structure.description
               .split('\n')
@@ -124,6 +101,29 @@ export default function StoryPage({
               ))}
             </>
           )}
+          <div
+            style={{
+              width: IMAGE_SIZE,
+              height: IMAGE_SIZE,
+              marginBottom: PADDING,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            {imageUrl ? (
+              <Image
+                src={imageUrl}
+                alt="generated image"
+                width={IMAGE_SIZE}
+                height={IMAGE_SIZE}
+              />
+            ) : imageErrorMessage ? (
+              <ErrorMessage message={imageErrorMessage} />
+            ) : (
+              <CircularProgress style={{ width: 100, height: 100 }} />
+            )}
+          </div>
         </>
       ) : contentErrorMessage ? (
         <ErrorMessage message={contentErrorMessage} />
