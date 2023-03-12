@@ -16,22 +16,27 @@ import ErrorMessage from './ErrorMessage';
 const IMAGE_SIZE = 512;
 const PADDING = 48;
 
-interface PageProps {
+interface StoryPageProps {
   prefix: ChatCompletionRequestMessage[];
   onAddPage: (content: string, choice: number) => void;
   onDeleteFuturePages: () => void;
+}
+
+interface StoryStructure {
+  description: string;
+  choices?: string[];
 }
 
 export default function StoryPage({
   prefix,
   onAddPage,
   onDeleteFuturePages,
-}: PageProps) {
+}: StoryPageProps) {
   const [content, contentErrorMessage, regenerateContent] =
     useGeneratedText(prefix);
   const [selectedChoice, setSelectedChoice] = useState<number | undefined>();
 
-  const structure = useMemo(() => {
+  const structure = useMemo<StoryStructure>(() => {
     if (!content) return undefined;
     const dividerIndex = content.indexOf(DIVIDER);
     if (dividerIndex < 0) return { description: content };
@@ -42,16 +47,8 @@ export default function StoryPage({
       .split(/#[0-9]:\s*/)
       .map((segment) => segment.trim())
       .filter(Boolean);
-    return { description, options };
+    return { description, choices: options };
   }, [content]);
-
-  const [imageUrl, imageErrorMessage] = useGeneratedImage(
-    structure &&
-      `
-      Beautiful illustration for this passage in a story: ${structure.description}
-      Do NOT include words or lettering of any kind!
-      `
-  );
 
   return (
     <Card
@@ -78,52 +75,18 @@ export default function StoryPage({
       </IconButton>
       {structure ? (
         <>
-          <div style={{ fontStyle: 'italic' }}>
-            {structure.description
-              .split('\n')
-              .map((paragraph, i) => paragraph && <p key={i}>{paragraph}</p>)}
-          </div>
-          {structure.options && (
-            <>
-              <h4>{DIVIDER}</h4>
-              {structure.options.map((option, choice) => (
-                <Button
-                  key={choice}
-                  fullWidth
-                  variant={selectedChoice === choice ? 'contained' : 'text'}
-                  onClick={() => {
-                    setSelectedChoice(choice);
-                    onAddPage(content, choice);
-                  }}
-                >
-                  {option}
-                </Button>
-              ))}
-            </>
+          <StoryContent structure={structure} />
+          {structure.choices && (
+            <StoryChoices
+              choices={structure.choices}
+              selectedChoice={selectedChoice}
+              onChoose={(choice) => {
+                setSelectedChoice(choice);
+                onAddPage(content, choice);
+              }}
+            />
           )}
-          <div
-            style={{
-              width: IMAGE_SIZE,
-              height: IMAGE_SIZE,
-              marginBottom: PADDING,
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-            }}
-          >
-            {imageUrl ? (
-              <Image
-                src={imageUrl}
-                alt="generated image"
-                width={IMAGE_SIZE}
-                height={IMAGE_SIZE}
-              />
-            ) : imageErrorMessage ? (
-              <ErrorMessage message={imageErrorMessage} />
-            ) : (
-              <CircularProgress style={{ width: 100, height: 100 }} />
-            )}
-          </div>
+          <StoryImage structure={structure} />
         </>
       ) : contentErrorMessage ? (
         <ErrorMessage message={contentErrorMessage} />
@@ -131,5 +94,87 @@ export default function StoryPage({
         <LinearProgress style={{ width: IMAGE_SIZE }} />
       )}
     </Card>
+  );
+}
+
+interface StoryContentProps {
+  structure: StoryStructure;
+}
+
+function StoryContent({ structure }: StoryContentProps) {
+  return (
+    <div style={{ fontStyle: 'italic' }}>
+      {structure.description
+        .split('\n')
+        .map((paragraph, i) => paragraph && <p key={i}>{paragraph}</p>)}
+    </div>
+  );
+}
+
+interface StoryChoicesProps {
+  choices: string[];
+  selectedChoice: number | undefined;
+  onChoose: (choice: number) => void;
+}
+
+function StoryChoices({
+  choices,
+  selectedChoice,
+  onChoose,
+}: StoryChoicesProps) {
+  return (
+    <>
+      <h4>{DIVIDER}</h4>
+      {choices.map((option, choice) => (
+        <Button
+          key={choice}
+          fullWidth
+          variant={selectedChoice === choice ? 'contained' : 'text'}
+          onClick={() => onChoose(choice)}
+        >
+          {option}
+        </Button>
+      ))}
+    </>
+  );
+}
+
+interface StoryImageProps {
+  structure: StoryStructure;
+}
+
+function StoryImage({ structure }: StoryImageProps) {
+  const [imageUrl, imageErrorMessage] = useGeneratedImage(
+    structure &&
+      `
+      Beautiful illustration for this passage in a story: ${structure.description}
+      Do NOT include words or lettering of any kind!
+      `
+  );
+
+  return (
+    <div
+      style={{
+        width: IMAGE_SIZE,
+        height: IMAGE_SIZE,
+        marginBottom: PADDING,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}
+    >
+      {imageUrl ? (
+        <Image
+          src={imageUrl}
+          alt="generated image"
+          width={IMAGE_SIZE}
+          height={IMAGE_SIZE}
+        />
+      ) : imageErrorMessage ? (
+        <ErrorMessage message={imageErrorMessage} />
+      ) : (
+        <CircularProgress style={{ width: 100, height: 100 }} />
+      )}
+    </div>
   );
 }
