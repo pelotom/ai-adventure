@@ -1,10 +1,14 @@
 import AutorenewIcon from '@mui/icons-material/Autorenew';
 import {
-  Button,
   Card,
   CircularProgress,
+  FormControl,
+  FormControlLabel,
+  FormLabel,
   IconButton,
   LinearProgress,
+  Radio,
+  RadioGroup,
 } from '@mui/material';
 import Image from 'next/image';
 import { ChatCompletionRequestMessage } from 'openai';
@@ -93,7 +97,7 @@ export default function StoryPage({
       ) : contentErrorMessage ? (
         <ErrorMessage message={contentErrorMessage} />
       ) : (
-        <LinearProgress style={{ width: IMAGE_SIZE * 2 }} />
+        <LinearProgress style={{ width: IMAGE_SIZE * 2 + PADDING }} />
       )}
     </Card>
   );
@@ -126,17 +130,24 @@ function StoryChoices({
 }: StoryChoicesProps) {
   return (
     <div>
-      <h4>{DIVIDER}</h4>
-      {choices.map((option, choice) => (
-        <Button
-          key={choice}
-          fullWidth
-          variant={selectedChoice === choice ? 'contained' : 'text'}
-          onClick={() => onChoose(choice)}
+      <FormControl>
+        <FormLabel id="demo-radio-buttons-group-label">{DIVIDER}</FormLabel>
+        <RadioGroup
+          aria-labelledby="demo-radio-buttons-group-label"
+          name="radio-buttons-group"
+          value={selectedChoice || null}
+          onChange={({ target }) => onChoose(parseInt(target.value, 10))}
         >
-          {option}
-        </Button>
-      ))}
+          {choices.map((option, choice) => (
+            <FormControlLabel
+              key={choice}
+              value={choice}
+              control={<Radio />}
+              label={option}
+            />
+          ))}
+        </RadioGroup>
+      </FormControl>
     </div>
   );
 }
