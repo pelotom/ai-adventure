@@ -14,7 +14,7 @@ import { useGeneratedImage, useGeneratedText } from '../hooks';
 import ErrorMessage from './ErrorMessage';
 
 const IMAGE_SIZE = 512;
-const PADDING = 48;
+const PADDING = 32;
 
 interface StoryPageProps {
   prefix: ChatCompletionRequestMessage[];
@@ -53,7 +53,7 @@ export default function StoryPage({
   return (
     <Card
       style={{
-        width: IMAGE_SIZE + PADDING,
+        width: (IMAGE_SIZE + PADDING) * 2,
         padding: PADDING,
         paddingTop: PADDING / 2,
         display: 'flex',
@@ -74,24 +74,26 @@ export default function StoryPage({
         <AutorenewIcon />
       </IconButton>
       {structure ? (
-        <>
-          <StoryContent structure={structure} />
-          {structure.choices && (
-            <StoryChoices
-              choices={structure.choices}
-              selectedChoice={selectedChoice}
-              onChoose={(choice) => {
-                setSelectedChoice(choice);
-                onAddPage(content, choice);
-              }}
-            />
-          )}
+        <div style={{ display: 'flex' }}>
+          <div style={{ width: IMAGE_SIZE, marginRight: PADDING }}>
+            <StoryContent structure={structure} />
+            {structure.choices && (
+              <StoryChoices
+                choices={structure.choices}
+                selectedChoice={selectedChoice}
+                onChoose={(choice) => {
+                  setSelectedChoice(choice);
+                  onAddPage(content, choice);
+                }}
+              />
+            )}
+          </div>
           <StoryImage structure={structure} />
-        </>
+        </div>
       ) : contentErrorMessage ? (
         <ErrorMessage message={contentErrorMessage} />
       ) : (
-        <LinearProgress style={{ width: IMAGE_SIZE }} />
+        <LinearProgress style={{ width: IMAGE_SIZE * 2 }} />
       )}
     </Card>
   );
@@ -123,7 +125,7 @@ function StoryChoices({
   onChoose,
 }: StoryChoicesProps) {
   return (
-    <>
+    <div>
       <h4>{DIVIDER}</h4>
       {choices.map((option, choice) => (
         <Button
@@ -135,7 +137,7 @@ function StoryChoices({
           {option}
         </Button>
       ))}
-    </>
+    </div>
   );
 }
 
